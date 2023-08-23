@@ -1,7 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
 import time
-import wikipediaapi
 from kiwipiepy import Kiwi
 
 # 연관검색어 추출하기
