@@ -1,79 +1,106 @@
-def make_word(result):
-    cosine_list = []
-    made_words = []
-    temp_word = ""
-    bef_tag = ""
-    bef_loc = 0
-    form_num = 0
-    cnt_dict = {}
-    cosine = {}
-    for form, tag, start, length in result:
+import re
 
-        # Nouns (일반명사, 고유명사)
-        if tag in ['NNP', 'NNG']:
+text = '''
+=== 엘리트 부대 ===
+* 코마바 사토코(駒場 聡子) - [[나카지마 사키 (가수)|나카지마 사키]](솔로)
+: 엘리트 교육을 받고있다.
+* 마타 토모코(三田 智子) - [[오카이 치사토]](솔로)
+* 요츠야 유코(四谷 優子) - [[하기와라 마이]]
 
-            # 명사 여러 개가 띄어쓰기 없이 나왔을 때 한 단어로 취급
-            if bef_tag == 'NN' and bef_loc == start:
-                temp_word += form
+=== 니나파 ===
+* 마이하마 하루(舞浜 はる) - [[다카기 사유키]] ([[Juice=Juice]])
+: 1학년. 니나를 동경하고 있다.
+* 핫케이지마 나츠(八景島 なつ) - [[요시하시 쿠루미]] (하로프로연수생)
+: 1학년. 니나를 동경하고 있다.
+* 오다이바 아키(台場 あき) - [[다나베 나나미]] (하로프로연수생)
+: 1학년. 니나를 동경하고 있다.
+* 텐겐지 소라(天現寺 空) - [[와다 아야카]] ([[스마이레지]]리더)
+: 1학년. 니나를 동경하고 있다. 항상 메인 스토리와는 관계없는 부분에 스포트 출연.
+* 야마시타 우미(山下 海) - [[후쿠다 카논]] (솔로, [[작사가]])
+: 1학년. 니나를 동경하고 있다. 항상 메인 스토리와는 관계없는 부분에 스포트 출연.
+* 오쿠라 리쿠(大倉 陸) - [[타무라 메이미]] (솔로)
+: 1학년. 니나를 동경하고 있다. 항상 메인 스토리와는 관계없는 부분에 스포트 출연.
 
-            # 띄어쓰기 후에 들어오는 명사
-            elif bef_tag == 'NN' and bef_loc != start:
-                if temp_word in cnt_dict:
-                    cnt_dict[temp_word] += 1
-                else:
-                    cnt_dict[temp_word] = 1
-                made_words.append(temp_word)
-                temp_word = form
-                form_num = 0 # 밑에서 1 더해서 일단 초기화
-                
-            # 관형격 조사 다음에 들어오는 명사
-            elif bef_tag == 'JKG' or bef_tag == 'XSN':
-                cosine_list.append(form)
-                temp_word += form
-                
-            elif temp_word == "":
-                temp_word = form
+=== 데빌 시스터즈 ===
+* 스가모 아키나(巣鴨 明奈) - [[야스다 케이]](솔로)
+: 15년 유급하고 있는 3학년. 데빌 시스터즈의 리더.
+* 아사쿠사 세이코(浅草 聖子) - [[이이다 카오리]](솔로)
+: 15년 유급하고 있는 3학년. 데빌 시스터즈의 부리더.
 
-            bef_loc = start + length
-            form_num += 1
-            bef_tag = 'NN'
+=== 기타 ===
+* 나가타 사나(永田 沙奈) - [[사야시 리호]] (솔로)
+: 매번 수학 배틀시 심판으로 등장. 쿨하고 공정한 자세로 배틀을 심판.
+* 토리우미 나기사(鳥海 渚) - [[니이가키 리사]](솔로)
+: 사립 마치 수학 전문 고등학교에 근무하는 교사. 니나의 고민을 열심히 듣고 실종된 언니 찾기를 응원하고 있다.
+* 우에하라 유리(上原 優梨) - [[스즈키 아이리]](솔로)
+: 2학년 A반. 니나와 사유리의 클래스 메이트. 귀여운척하는 인물. 반해 쉬운 성격이지만 연애보다 수학에 대한 동경이 강하다. 니나에 대해 수학 배틀을 거는가 패배에서 니나의 동료가 된다.
+* 하츠다이 미나(初台 みな) - [[사호 아카리]]([[업업걸즈(가)]])
+: 유리의 사랑을 응원하고 있다.
+* 하라주쿠 토모코(原宿 ともこ) - [[츠구나가 모모코]]
+: 자신이 가장 귀엽다고 자부하고 있다. 캐릭터가 겹치게되는 사유리에게 대결을 건다.
+* 시로카네 레이코(白金 麗子) - [[마노 에리나]](솔로)
+: 변덕스러운 아가씨.
+* 메구로 유우(目黒 ゆう) - [[미야모토 카린]] ([[Juice=Juice]])
+: 레이코를 갈망하고 있다.
+* 마치다 키나(町田 キーナ) - [[이시카와 리카]](솔로)
+: 니나의 언니. 여동생이 훌륭한 수학 두목이 되어 성장시키기 위해, 마지막 싸움을 니나 밖에 찬다.
+* 무라키(村木) - [[스즈노스케]]
+: 니나들이 재학 중인 2학년 A반의 담임 교사.
+* 이마와카(イマワカ) - [[마키타 테츠야]]
+:교육 실습생. 진실하게 한 눈 반해 된다.
 
-        # 관형격 조사일 때 ex)신의성실의 원칙
-        elif tag == 'JKG' and bef_tag == "NN":
-            cosine_list.append(temp_word)
-            temp_word += form + " "
-            bef_tag = 'JKG'
-            form_num += 1
+== 주제곡 ==
+* 오프닝: 모닝구무스메。/「[[표코표코 울트라|ピョコピョコ ウルトラ]]」
+* 엔딩: [[Buono!]] /「[[첫사랑 사이다/DEEP MIND|初恋サイダー]]」
 
-        # ~적 ex)안정적 공급
-        elif tag == 'XSN' and bef_tag == "NN":
-            cosine_list.append(temp_word)
-            temp_word += form + " "
-            bef_tag = 'XSN'
-            form_num += 1
-        
-        # 그 외의 태그 등장시 만들어진 단어 append
-        else:
-            if bef_tag == 'NN' and len(temp_word) > 1:
-                if temp_word in cnt_dict:
-                    cnt_dict[temp_word] += 1
-                else:
-                    cnt_dict[temp_word] = 1
-                made_words.append(temp_word)
-                # for token in cosine_list:
-                #     if token in ko_model.wv.key_to_index:
-                #         cosine_sim = cosine_similarity([ko_model.wv[text_data['parse']['title']]], [ko_model.wv[token]])
-                #         if cosine_sum < cosine_sim:
-                #             cosine_sum = cosine_sim
-                #             cosine[temp_word] = cosine_sum
+== 방송일·부제·시청률 ==
+{| class="wikitable" style="text-align:center; font-size:small"
+!각 화!!방송일!!부제!!시청률
+|-
+|제01화||2012년 1월 11일||팬츠를 본 것이 군요! 배틀이 발발 <br />||1.6%
+|-
+|제02화||2012년 1월 18일||도난 사건? 미녀가 널 체포하겠어 <br />||1.7%
+|-
+|제03화||2012년 1월 25일||대식 미녀와 교내 레이스 배틀! <br />||1.0%
+|-
+|제04화||2012년 2월 1일||풍기를 어지럽히는 사람은 퇴학이야! <br />||1.3%
+|-
+|제05화||2012년 2월 8일||큐트한 고실등에서 좌석을 바꾸는 것 작전 <br />||1.4%
+|-
+|제06화||2012년 2월 15일||미녀 배틀 미치시게VS츠구나가! 하로프로<br />||1.6%
+|-
+|제07화||2012년 2월 22일||다나카·미치시게 스마이레지<br />||1.5%
+|-
+|제08화||2012년 2월 29일||큐트의 미녀 군단이 수학 배틀<br />||1.4%
+|-
+|제09화||2012년 3월 7일||일목가 뜻밖의 전개<br />||1.7%
+|-
+|제10화||2012년 3월 14일||전학생은 아가씨!?<br />||2.7%
+|-
+|제11화||2012년 3월 21일||최강의 적이 나타났어?<br />||1.8%
+|-
+|제12화||2012년 3월 28일||결전!<br />||2.1%
+|-
+|}
 
-            cosine_list = []
-            cosine_sum = 0
-            temp_word = ""
-            bef_tag = ""
-            bef_loc = 0
-            form_num = 0
+== 외부 링크 ==
+* [https://web.archive.org/web/20120123221155/http://ntvg-tv.jp/sj/ 수학♥여자학원 공식 사이트]
 
-    return cosine, made_words, cnt_dict
+[[분류:일본의 텔레비전 드라마]]
+[[분류:2012년 드라마]]
+[[분류:닛폰 TV의 심야 드라마]]
+[[분류:텔레비전 학교 드라마]]
+[[분류:헬로! 프로젝트]]
+[[분류:모닝구무스메]]
+[[분류:Berryz코보]]
+[[분류:℃-ute]]
+[[분류:안주루무]]
+'''
 
-make_word()
+def remove_section(text):
+    pattern = r'== 외부 링크 ==|== 주제곡 =='
+    cleaned_text = re.sub(pattern, '', text, flags=re.DOTALL)
+    return cleaned_text
+
+cleaned_text = remove_section(text)
+print(cleaned_text)
