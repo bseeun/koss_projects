@@ -1,7 +1,7 @@
 import openai
 
 # OpenAI API 키 설정
-openai.api_key = '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'
+openai.api_key = ''
 
 # 오디오 파일 경로
 audio_file_path = 'song.mp3'
